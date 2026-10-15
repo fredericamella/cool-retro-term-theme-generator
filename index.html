@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>cool-retro-term theme generator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Live theme generator for cool-retro-term: tweak every profile setting, preview the CRT effects in real time and export the .json file.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Fira+Code&family=JetBrains+Mono&family=Inconsolata&family=Share+Tech+Mono&family=Source+Code+Pro&display=swap">
+<style>
+/* Layout: boitier d'ordinateur. A gauche l'ecran (apercu + fichier), a droite la face avant de reglages. Clair = plastique beige, sombre = boitier anthracite. */
+:root{
+  --case:#cdc9be;--panel:#e6e3da;--panel-2:#dad6cb;--hover:#d0ccc0;--field:#f6f4ee;--code:#f2f0ea;
+  --ink:#24231f;--muted:#6a665c;--line:#aaa598;--dash:#cbc6b9;--bezel:#1d1c1a;--bezel-ink:#9b968a;
+  --accent:#c2410c;--accent-dark:#8f2f08;--accent-ink:#fff7f0;--err:#a3221a;
+  --c-key:#7a3e12;--c-str:#2f6b2a;--c-num:#1f4f8a;--c-bool:#8a1f5a;
+  --grain:rgba(0,0,0,.025);--shadow:rgba(40,35,25,.25);
+  --f-display:"VT323","IBM Plex Mono",ui-monospace,monospace;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --case:#1c1b19;--panel:#262521;--panel-2:#302e29;--hover:#3a3832;--field:#1a1917;--code:#171614;
+  --ink:#ece7db;--muted:#a59f92;--line:#48453d;--dash:#3a3832;--bezel:#0d0c0b;--bezel-ink:#7e796e;
+  --accent:#d9561e;--accent-dark:#9a3a10;--accent-ink:#fff7f0;--err:#ff8a7a;
+  --c-key:#f0a46a;--c-str:#9fd48f;--c-num:#8fb8ff;--c-bool:#ff9ccf;
+  --grain:rgba(255,255,255,.018);--shadow:rgba(0,0,0,.5);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --case:#1c1b19;--panel:#262521;--panel-2:#302e29;--hover:#3a3832;--field:#1a1917;--code:#171614;
+  --ink:#ece7db;--muted:#a59f92;--line:#48453d;--dash:#3a3832;--bezel:#0d0c0b;--bezel-ink:#7e796e;
+  --accent:#d9561e;--accent-dark:#9a3a10;--accent-ink:#fff7f0;--err:#ff8a7a;
+  --c-key:#f0a46a;--c-str:#9fd48f;--c-num:#8fb8ff;--c-bool:#ff9ccf;
+  --grain:rgba(255,255,255,.018);--shadow:rgba(0,0,0,.5);color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--case);color:var(--ink)}
+body{font-family:var(--f-body);font-size:14px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 28px;
+  background-image:repeating-linear-gradient(0deg,var(--grain) 0 1px,transparent 1px 3px)}
+.wrap{max-width:1360px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.topbar{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px 16px;align-items:center}
+.topbar label{display:flex;align-items:center;gap:8px;font:500 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.topbar select{width:auto;padding:6px 8px;font-size:13px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;border-bottom:2px solid var(--line);padding-bottom:12px}
+h1{font-family:var(--f-display);font-weight:400;font-size:44px;line-height:.9;margin:0;letter-spacing:.5px;text-wrap:balance}
+h1 span{color:var(--accent)}
+.sub{color:var(--muted);margin:6px 0 0;max-width:62ch}
+.badge{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:4px 8px;border-radius:3px;background:var(--panel)}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.left{display:flex;flex-direction:column;gap:16px;min-width:0}
+@media (min-width:901px){.left{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}}
+.monitor{background:var(--bezel);border-radius:14px;padding:14px;box-shadow:inset 0 2px 0 rgba(255,255,255,.08),0 10px 24px var(--shadow)}
+.desk{border-radius:6px;overflow:hidden;background:linear-gradient(135deg,#3b5b7a 0 25%,#7a4b3b 25% 50%,#3b7a5a 50% 75%,#6b5b8a 75%);background-size:48px 48px}
+canvas#crt{display:block;width:100%;aspect-ratio:4/3;max-width:100%}
+.monitor-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;color:var(--bezel-ink);font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.led{display:inline-block;width:8px;height:8px;border-radius:50%;background:#46d16a;box-shadow:0 0 6px #46d16a;margin-right:6px;vertical-align:middle}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px}
+.out-head{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--line)}
+.out-head h2{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:0;color:var(--muted);font-weight:500;min-width:0;overflow-wrap:anywhere}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button,.filebtn{font:500 13px/1 var(--f-body);border:1px solid var(--line);background:var(--panel-2);color:var(--ink);padding:9px 12px;border-radius:4px;cursor:pointer;box-shadow:0 2px 0 var(--line)}
+button:hover,.filebtn:hover{background:var(--hover)}
+button:active{transform:translateY(1px);box-shadow:0 1px 0 var(--line)}
+button.primary{background:var(--accent);border-color:var(--accent-dark);color:var(--accent-ink);box-shadow:0 2px 0 var(--accent-dark)}
+button.primary:hover{background:var(--accent-dark)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+pre#json{margin:0;padding:12px;font:12.5px/1.5 var(--f-mono);overflow:auto;max-height:340px;background:var(--code);color:var(--ink);border-radius:0 0 6px 6px;font-variant-numeric:tabular-nums}
+pre#json .k{color:var(--c-key)}pre#json .s{color:var(--c-str)}pre#json .n{color:var(--c-num)}pre#json .b{color:var(--c-bool)}
+.right{display:flex;flex-direction:column;gap:14px;min-width:0}
+.namebar{padding:12px;display:flex;flex-direction:column;gap:10px}
+.row2{display:flex;flex-wrap:wrap;gap:8px}
+.row2>*{flex:1 1 160px;min-width:0}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+input[type=text],select,textarea{font:14px var(--f-body);color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:4px;padding:8px 9px;width:100%;min-width:0}
+textarea{font-family:var(--f-mono);font-size:12px;min-height:120px;resize:vertical}
+fieldset{border:1px solid var(--line);border-radius:6px;background:var(--panel);margin:0;padding:6px 12px 12px;min-width:0}
+legend{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);background:var(--case);border:1px solid var(--line);padding:3px 8px;border-radius:3px}
+.ctl{display:grid;grid-template-columns:minmax(0,9.5em) minmax(0,1fr) 3.4em;gap:10px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--dash)}
+.ctl:last-child{border-bottom:0}
+.ctl .lab{font-size:13px;line-height:1.2}
+.ctl .lab small{display:block;color:var(--muted);font-family:var(--f-mono);font-size:10.5px}
+.ctl output{font:12px var(--f-mono);text-align:right;font-variant-numeric:tabular-nums;color:var(--ink)}
+@media (max-width:440px){.ctl{grid-template-columns:minmax(0,1fr) 3.4em}.ctl input[type=range]{grid-column:1 / -1;grid-row:2}}
+input[type=range]{width:100%;accent-color:var(--accent);min-width:0}
+.colors{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;padding:8px 0 4px}
+.sw{display:flex;align-items:center;gap:8px;font-size:13px}
+.sw input[type=color]{width:42px;height:32px;border:1px solid var(--line);border-radius:4px;padding:2px;background:var(--field);cursor:pointer}
+.sw code{font:12px var(--f-mono);color:var(--muted)}
+.check{display:flex;align-items:center;gap:8px;padding:8px 0 2px;font-size:13px}
+.check input{accent-color:var(--accent);width:16px;height:16px}
+.note{font-size:12px;color:var(--muted);margin:6px 0 0}
+.howto{padding:12px 14px;font-size:13px}
+.howto h3{margin:0 0 6px;font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;color:var(--muted)}
+.howto ol{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:3px}
+.howto code{font-family:var(--f-mono);font-size:12px;background:var(--code);padding:1px 4px;border-radius:3px;border:1px solid var(--dash)}
+#importBox{padding:12px;display:flex;flex-direction:column;gap:8px}
+.filebtn{display:inline-flex;align-items:center;position:relative}
+.filebtn input{position:absolute;opacity:0;width:1px;height:1px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--bezel);color:#f0ece2;padding:10px 14px;border-radius:5px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.3);z-index:10;max-width:calc(100% - 32px)}
+.err{color:var(--err);font-size:12px;margin:0}
+footer{border-top:2px solid var(--line);padding-top:12px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 20px;color:var(--muted);font-size:12px}
+footer .credit{font-family:var(--f-mono);color:var(--ink);letter-spacing:.02em}
+footer a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){button:active{transform:none}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <div class="topbar">
+    <label for="langSel"><span data-i18n="lang">Langue</span>
+      <select id="langSel"><option value="fr">Français</option><option value="en">English</option><option value="de">Deutsch</option></select></label>
+    <label for="themeSel"><span data-i18n="appearance">Apparence</span>
+      <select id="themeSel"><option value="system" data-i18n="th_system">Système</option><option value="light" data-i18n="th_light">Clair</option><option value="dark" data-i18n="th_dark">Sombre</option></select></label>
+  </div>
+
+  <header>
+    <div>
+      <h1>cool-retro-term <span>theme generator</span></h1>
+      <p class="sub" data-i18n="sub"></p>
+    </div>
+    <span class="badge" data-i18n="badge"></span>
+  </header>
+
+  <div class="grid">
+    <div class="left">
+      <div class="monitor">
+        <div class="desk"><canvas id="crt"></canvas></div>
+        <div class="monitor-foot"><span><span class="led"></span><span id="themeLabel"></span></span><span data-i18n="approx"></span></div>
+      </div>
+
+      <div class="card">
+        <div class="out-head">
+          <h2 id="fileName">default-amber.json</h2>
+          <div class="btns">
+            <button id="copyBtn" type="button" data-i18n="copy"></button>
+            <button id="dlBtn" class="primary" type="button" data-i18n="download"></button>
+          </div>
+        </div>
+        <pre id="json" tabindex="0"></pre>
+      </div>
+
+      <div class="card howto">
+        <h3 data-i18n="install_h"></h3>
+        <ol><li data-i18n-html="install_1"></li><li data-i18n-html="install_2"></li><li data-i18n-html="install_3"></li></ol>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="card namebar">
+        <div class="row2">
+          <label class="f"><span data-i18n="name_label"></span><input type="text" id="name" maxlength="60"></label>
+          <label class="f"><span data-i18n="preset_label"></span><select id="preset"></select></label>
+        </div>
+        <div class="btns">
+          <button type="button" id="randBtn" data-i18n="rand"></button>
+          <button type="button" id="importToggle" data-i18n="import_toggle"></button>
+          <button type="button" id="resetBtn" data-i18n="reset"></button>
+        </div>
+        <div id="importBox" class="card" hidden>
+          <label class="f" for="importText" data-i18n="import_label"></label>
+          <textarea id="importText" placeholder='{ "fontColor": "#5efaac", "backgroundColor": "#020000", ... }'></textarea>
+          <p class="err" id="importErr" hidden></p>
+          <div class="btns">
+            <button type="button" class="primary" id="importBtn" data-i18n="import_btn"></button>
+            <label class="filebtn"><span data-i18n="import_file"></span><input type="file" id="importFile" accept=".json,application/json"></label>
+          </div>
+        </div>
+      </div>
+
+      <fieldset>
+        <legend data-i18n="lg_colors"></legend>
+        <div class="colors">
+          <label class="sw"><input type="color" id="fontColor"><span><span data-i18n="c_text"></span><br><code id="fontColorHex"></code></span></label>
+          <label class="sw"><input type="color" id="backgroundColor"><span><span data-i18n="c_bg"></span><br><code id="backgroundColorHex"></code></span></label>
+        </div>
+        <div id="g-color"></div>
+        <p class="note" data-i18n="chroma_note"></p>
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="lg_font"></legend>
+        <div class="row2" style="padding-top:8px">
+          <label class="f"><span data-i18n="font_label"></span><select id="fontSel"></select></label>
+          <label class="f" id="sysWrap" hidden><span data-i18n="sysfont_label"></span><input type="text" id="sysFont" placeholder="DejaVu Sans Mono"></label>
+        </div>
+        <div id="g-font"></div>
+        <label class="check"><input type="checkbox" id="blinkingCursor"><span data-i18n="blink"></span></label>
+      </fieldset>
+
+      <fieldset><legend data-i18n="lg_light"></legend><div id="g-light"></div></fieldset>
+      <fieldset><legend data-i18n="lg_signal"></legend><div id="g-signal"></div></fieldset>
+
+      <fieldset>
+        <legend data-i18n="lg_screen"></legend>
+        <div class="row2" style="padding-top:8px">
+          <label class="f"><span data-i18n="raster_label"></span><select id="rasterization">
+            <option value="0" data-i18n="r0"></option><option value="1" data-i18n="r1"></option><option value="2" data-i18n="r2"></option><option value="3" data-i18n="r3"></option><option value="4" data-i18n="r4"></option>
+          </select></label>
+        </div>
+        <div id="g-screen"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend data-i18n="lg_frame"></legend>
+        <div class="colors">
+          <label class="sw"><input type="color" id="frameColor"><span><span data-i18n="c_frame"></span><br><code id="frameColorHex"></code></span></label>
+        </div>
+        <div id="g-frame"></div>
+      </fieldset>
+      <p class="note" data-i18n="fonts_note"></p>
+    </div>
+  </div>
+
+  <footer>
+    <span class="credit">cool-retro-term theme generator v1.0 - Frédéric AMELLA</span>
+    <span><span data-i18n="based_on"></span> <a href="https://github.com/Swordfish90/cool-retro-term" target="_blank" rel="noopener">cool-retro-term</a> (Filippo Scognamiglio, GPL-3.0) · <a href="https://github.com/fredericamella/cool-retro-term-theme-generator" target="_blank" rel="noopener" data-i18n="source"></a></span>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function(){
+"use strict";
+var I18N={
+fr:{lang:"Langue",appearance:"Apparence",th_system:"Système",th_light:"Clair",th_dark:"Sombre",
+ sub:"Réglez chaque paramètre du profil, l'écran réagit en direct. Le fichier généré s'importe tel quel dans cool-retro-term.",
+ badge:"Profil version 2",approx:"Aperçu approché",copy:"Copier le JSON",download:"Télécharger le fichier",
+ install_h:"Installer le thème",
+ install_1:"Dans cool-retro-term, clic droit puis <code>Settings</code>.",
+ install_2:"Onglet <code>General</code>, section des profils : <code>Import</code>.",
+ install_3:"Choisissez le fichier <code>.json</code>, puis <code>Load</code> sur le profil importé.",
+ name_label:"Nom du thème",preset_label:"Partir d'un modèle",preset_choose:"Choisir...",rand:"Thème aléatoire",import_toggle:"Importer un thème",reset:"Réinitialiser",
+ import_label:"Collez le JSON d'un thème (par exemple depuis le wiki)",import_btn:"Charger ce JSON",import_file:"Ouvrir un fichier .json",
+ import_err:"Ce texte n'est pas un JSON valide. Vérifiez qu'il commence par { et finit par }.",
+ lg_colors:"Couleurs",c_text:"Texte",c_bg:"Fond",
+ chroma_note:"Comme dans cool-retro-term, les couleurs ANSI sont multipliées par la couleur du texte : avec un texte ambre, le bleu disparaît. Pour des couleurs franches, mettez « Couleurs ANSI » au-dessus de 0 et un texte blanc ou très clair.",
+ lg_font:"Police",font_label:"Police",sysfont_label:"Nom de la police système",sys_option:"Police système...",unscaled:"non mis à l'échelle",blink:"Curseur clignotant",
+ lg_light:"Lumière",lg_signal:"Signal",lg_screen:"Écran",raster_label:"Rendu des lignes",r0:"Aucun",r1:"Lignes de balayage",r2:"Pixels",r3:"Sous-pixels RVB",r4:"Moderne (net)",
+ lg_frame:"Cadre",c_frame:"Couleur du cadre",
+ fonts_note:"Les polices d'origine sont remplacées par des équivalents web dans l'aperçu. Les valeurs exportées sont celles que lit cool-retro-term.",
+ based_on:"Basé sur",source:"Code source",
+ t_preset:"Modèle « {0} » chargé",t_reset:"Réglages réinitialisés",t_random:"Nouveau thème aléatoire",t_imported:"Thème importé",t_copied:"JSON copié dans le presse-papiers",
+ t_selected:"Texte sélectionné : copiez-le avec Ctrl+C",t_saved:"Fichier {0} enregistré",t_cancel:"Enregistrement annulé",t_busy:"Une demande est déjà ouverte, réessayez dans un instant",
+ t_unavail:"Téléchargement indisponible ici : utilisez « Copier le JSON »",t_dl:"Fichier {0} téléchargé",
+ webgl:"Votre navigateur ne prend pas en charge WebGL : l'aperçu est désactivé, mais le fichier reste générable.",
+ n_default:"Mon thème",n_random:"Thème aléatoire",n_imported:"Thème importé",canvas:"Aperçu du terminal avec les effets du thème",json_label:"Contenu du fichier de thème",
+ term1:"Bienvenue dans cool-retro-term.",term2:"Chaque curseur modifie ce rendu en direct.",tasks:"Tâches : ",total:" au total, ",running:" en cours",
+ s:{saturationColor:"Saturation",chromaColor:"Couleurs ANSI",contrast:"Contraste",brightness:"Luminosité",fontWidth:"Largeur",lineSpacing:"Interligne",bloom:"Halo (bloom)",glowingLine:"Ligne lumineuse",burnIn:"Rémanence",ambientLight:"Lumière ambiante",staticNoise:"Bruit statique",flickering:"Scintillement",horizontalSync:"Synchro horizontale",jitter:"Tremblement",rgbShift:"Décalage RVB",screenCurvature:"Courbure",screenRadius:"Arrondi des coins",margin:"Marge",windowOpacity:"Opacité fenêtre",frameSize:"Épaisseur",frameShininess:"Brillance"}},
+en:{lang:"Language",appearance:"Appearance",th_system:"System",th_light:"Light",th_dark:"Dark",
+ sub:"Adjust every profile setting and watch the screen react live. The generated file imports as is into cool-retro-term.",
+ badge:"Profile version 2",approx:"Approximate preview",copy:"Copy JSON",download:"Download file",
+ install_h:"Install the theme",
+ install_1:"In cool-retro-term, right-click and open <code>Settings</code>.",
+ install_2:"In the <code>General</code> tab, profiles section: <code>Import</code>.",
+ install_3:"Pick the <code>.json</code> file, then <code>Load</code> the imported profile.",
+ name_label:"Theme name",preset_label:"Start from a preset",preset_choose:"Choose...",rand:"Random theme",import_toggle:"Import a theme",reset:"Reset",
+ import_label:"Paste a theme's JSON (for example from the wiki)",import_btn:"Load this JSON",import_file:"Open a .json file",
+ import_err:"This text is not valid JSON. Check that it starts with { and ends with }.",
+ lg_colors:"Colors",c_text:"Text",c_bg:"Background",
+ chroma_note:"As in cool-retro-term, ANSI colors are multiplied by the text color: with amber text, blue disappears. For vivid colors, set “ANSI colors” above 0 and use white or very light text.",
+ lg_font:"Font",font_label:"Font",sysfont_label:"System font name",sys_option:"System font...",unscaled:"unscaled",blink:"Blinking cursor",
+ lg_light:"Light",lg_signal:"Signal",lg_screen:"Screen",raster_label:"Rasterization",r0:"None",r1:"Scanlines",r2:"Pixels",r3:"RGB subpixels",r4:"Modern (sharp)",
+ lg_frame:"Frame",c_frame:"Frame color",
+ fonts_note:"The original fonts are replaced by web equivalents in the preview. Exported values are the ones cool-retro-term reads.",
+ based_on:"Based on",source:"Source code",
+ t_preset:"Preset “{0}” loaded",t_reset:"Settings reset",t_random:"New random theme",t_imported:"Theme imported",t_copied:"JSON copied to clipboard",
+ t_selected:"Text selected: copy it with Ctrl+C",t_saved:"File {0} saved",t_cancel:"Save cancelled",t_busy:"A request is already open, try again in a moment",
+ t_unavail:"Download unavailable here: use “Copy JSON”",t_dl:"File {0} downloaded",
+ webgl:"Your browser does not support WebGL: the preview is off, but you can still generate the file.",
+ n_default:"My theme",n_random:"Random theme",n_imported:"Imported theme",canvas:"Terminal preview with the theme effects",json_label:"Theme file contents",
+ term1:"Welcome to cool-retro-term.",term2:"Every slider updates this screen live.",tasks:"Tasks: ",total:" total, ",running:" running",
+ s:{saturationColor:"Saturation",chromaColor:"ANSI colors",contrast:"Contrast",brightness:"Brightness",fontWidth:"Width",lineSpacing:"Line spacing",bloom:"Bloom",glowingLine:"Glowing line",burnIn:"Burn-in",ambientLight:"Ambient light",staticNoise:"Static noise",flickering:"Flickering",horizontalSync:"Horizontal sync",jitter:"Jitter",rgbShift:"RGB shift",screenCurvature:"Curvature",screenRadius:"Corner radius",margin:"Margin",windowOpacity:"Window opacity",frameSize:"Thickness",frameShininess:"Shininess"}},
+de:{lang:"Sprache",appearance:"Darstellung",th_system:"System",th_light:"Hell",th_dark:"Dunkel",
+ sub:"Passen Sie jede Profileinstellung an, der Bildschirm reagiert sofort. Die erzeugte Datei lässt sich direkt in cool-retro-term importieren.",
+ badge:"Profilversion 2",approx:"Ungefähre Vorschau",copy:"JSON kopieren",download:"Datei herunterladen",
+ install_h:"Theme installieren",
+ install_1:"In cool-retro-term rechts klicken und <code>Settings</code> öffnen.",
+ install_2:"Reiter <code>General</code>, Bereich Profile: <code>Import</code>.",
+ install_3:"Die <code>.json</code>-Datei wählen, dann das importierte Profil mit <code>Load</code> laden.",
+ name_label:"Name des Themes",preset_label:"Mit einer Vorlage beginnen",preset_choose:"Auswählen...",rand:"Zufälliges Theme",import_toggle:"Theme importieren",reset:"Zurücksetzen",
+ import_label:"JSON eines Themes einfügen (zum Beispiel aus dem Wiki)",import_btn:"Dieses JSON laden",import_file:".json-Datei öffnen",
+ import_err:"Dieser Text ist kein gültiges JSON. Prüfen Sie, ob er mit { beginnt und mit } endet.",
+ lg_colors:"Farben",c_text:"Text",c_bg:"Hintergrund",
+ chroma_note:"Wie in cool-retro-term werden ANSI-Farben mit der Textfarbe multipliziert: Bei bernsteinfarbenem Text verschwindet Blau. Für kräftige Farben „ANSI-Farben“ über 0 setzen und weißen oder sehr hellen Text wählen.",
+ lg_font:"Schrift",font_label:"Schrift",sysfont_label:"Name der Systemschrift",sys_option:"Systemschrift...",unscaled:"nicht skaliert",blink:"Blinkender Cursor",
+ lg_light:"Licht",lg_signal:"Signal",lg_screen:"Bildschirm",raster_label:"Rasterung",r0:"Keine",r1:"Scanlines",r2:"Pixel",r3:"RGB-Subpixel",r4:"Modern (scharf)",
+ lg_frame:"Rahmen",c_frame:"Rahmenfarbe",
+ fonts_note:"Die Originalschriften werden in der Vorschau durch Webschriften ersetzt. Exportiert werden die Werte, die cool-retro-term liest.",
+ based_on:"Basiert auf",source:"Quellcode",
+ t_preset:"Vorlage „{0}“ geladen",t_reset:"Einstellungen zurückgesetzt",t_random:"Neues zufälliges Theme",t_imported:"Theme importiert",t_copied:"JSON in die Zwischenablage kopiert",
+ t_selected:"Text markiert: mit Strg+C kopieren",t_saved:"Datei {0} gespeichert",t_cancel:"Speichern abgebrochen",t_busy:"Eine Anfrage ist bereits offen, bitte gleich erneut versuchen",
+ t_unavail:"Download hier nicht verfügbar: „JSON kopieren“ verwenden",t_dl:"Datei {0} heruntergeladen",
+ webgl:"Ihr Browser unterstützt kein WebGL: Die Vorschau ist aus, die Datei kann trotzdem erzeugt werden.",
+ n_default:"Mein Theme",n_random:"Zufälliges Theme",n_imported:"Importiertes Theme",canvas:"Terminalvorschau mit den Effekten des Themes",json_label:"Inhalt der Theme-Datei",
+ term1:"Willkommen bei cool-retro-term.",term2:"Jeder Regler ändert diese Ansicht sofort.",tasks:"Prozesse: ",total:" gesamt, ",running:" laufend",
+ s:{saturationColor:"Sättigung",chromaColor:"ANSI-Farben",contrast:"Kontrast",brightness:"Helligkeit",fontWidth:"Breite",lineSpacing:"Zeilenabstand",bloom:"Bloom",glowingLine:"Leuchtlinie",burnIn:"Nachleuchten",ambientLight:"Umgebungslicht",staticNoise:"Statisches Rauschen",flickering:"Flackern",horizontalSync:"Horizontale Synchronisation",jitter:"Zittern",rgbShift:"RGB-Verschiebung",screenCurvature:"Krümmung",screenRadius:"Eckenradius",margin:"Rand",windowOpacity:"Fensterdeckkraft",frameSize:"Stärke",frameShininess:"Glanz"}}
+};
+var LANG="fr";
+function t(k,a){var v=(I18N[LANG]&&I18N[LANG][k]);if(v===undefined)v=I18N.en[k]||k;return a!==undefined?v.replace("{0}",a):v;}
+function store(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function read(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+
+var SLIDERS=[
+ ["g-color","saturationColor",0,1,.01],["g-color","chromaColor",0,1,.01],["g-color","contrast",0,1,.01],["g-color","brightness",0,1,.01],
+ ["g-font","fontWidth",.5,2,.01],["g-font","lineSpacing",0,1,.01],
+ ["g-light","bloom",0,1,.01],["g-light","glowingLine",0,1,.01],["g-light","burnIn",0,1,.01],["g-light","ambientLight",0,1,.01],
+ ["g-signal","staticNoise",0,1,.01],["g-signal","flickering",0,1,.01],["g-signal","horizontalSync",0,1,.01],["g-signal","jitter",0,1,.01],["g-signal","rgbShift",0,1,.01],
+ ["g-screen","screenCurvature",0,1,.01],["g-screen","screenRadius",0,1,.01],["g-screen","margin",0,1,.01],["g-screen","windowOpacity",0,1,.01],
+ ["g-frame","frameSize",0,1,.01],["g-frame","frameShininess",0,1,.01]
+];
+var FONTS=[
+ ["TERMINESS_SCALED","Terminess (pixel)","VT323"],["TERMINUS_SCALED","Terminus (pixel)","VT323"],["TERMINUS","Terminus","VT323"],
+ ["DEPARTURE_MONO_SCALED","Departure Mono","Share Tech Mono"],["BIGBLUE_TERMINAL_SCALED","BigBlue Terminal","VT323"],
+ ["COMMODORE_64_SCALED","Commodore 64","Press Start 2P"],["COMMODORE_PET_SCALED","Commodore PET","Press Start 2P"],
+ ["APPLE_II_SCALED","Apple ][","Press Start 2P"],["APPLE_II","Apple ][ (~)","Press Start 2P"],
+ ["ATARI_400_SCALED","Atari 400","Press Start 2P"],["ATARI_400","Atari 400 (~)","Press Start 2P"],
+ ["IBM_VGA_8x16","IBM VGA 8x16","VT323"],["IBM_DOS","IBM DOS","VT323"],["IBM_3278","IBM 3278","IBM Plex Mono"],["PRO_FONT","ProFont","Share Tech Mono"],
+ ["IOSEVKA","Iosevka","IBM Plex Mono"],["JETBRAINS_MONO","JetBrains Mono","JetBrains Mono"],["FIRA_CODE","Fira Code","Fira Code"],
+ ["HACK","Hack","Source Code Pro"],["INCONSOLATA","Inconsolata","Inconsolata"],["__SYSTEM__","",""]
+];
+var DEFAULTS={backgroundColor:"#000000",fontColor:"#ff8100",flickering:.1,horizontalSync:.08,staticNoise:.12,chromaColor:.25,saturationColor:.25,screenCurvature:.3,glowingLine:.2,burnIn:.25,bloom:.55,rasterization:0,jitter:.2,rgbShift:0,brightness:.5,contrast:.8,ambientLight:.2,windowOpacity:1,fontName:"TERMINUS_SCALED",fontSource:0,fontWidth:1,lineSpacing:.1,margin:.5,blinkingCursor:false,frameSize:.2,screenRadius:.2,frameColor:"#ffffff",frameShininess:.2};
+var ORDER=["backgroundColor","fontColor","flickering","horizontalSync","staticNoise","chromaColor","saturationColor","screenCurvature","glowingLine","burnIn","bloom","rasterization","jitter","rgbShift","brightness","contrast","ambientLight","windowOpacity","fontName","fontSource","fontWidth","lineSpacing","margin","blinkingCursor","frameSize","screenRadius","frameColor","frameShininess"];
+var PRESETS=[
+ ["Default Amber",{ambientLight:.3,backgroundColor:"#000000",bloom:.6,brightness:.5,burnIn:.3,chromaColor:.2,contrast:.8,flickering:.1,fontColor:"#ff8100",fontName:"TERMINESS_SCALED",fontSource:0,fontWidth:1,lineSpacing:.1,glowingLine:.2,horizontalSync:.1,jitter:.2,rasterization:0,rgbShift:0,saturationColor:.2,screenCurvature:.2,screenRadius:.1,staticNoise:.1,windowOpacity:1,margin:.3,blinkingCursor:false,frameSize:.1,frameColor:"#cfcfcf",frameShininess:.3}],
+ ["Monochrome Green",{ambientLight:.3,backgroundColor:"#000000",bloom:.5,brightness:.5,burnIn:.3,chromaColor:0,contrast:.8,flickering:.1,fontColor:"#0ccc68",fontName:"DEPARTURE_MONO_SCALED",fontSource:0,fontWidth:1,lineSpacing:.1,glowingLine:.2,horizontalSync:.1,jitter:.2,rasterization:0,rgbShift:0,saturationColor:0,screenCurvature:.3,screenRadius:.2,staticNoise:.1,windowOpacity:1,margin:.3,blinkingCursor:false,frameSize:.1,frameColor:"#d4d4d4",frameShininess:.1}],
+ ["Deep Blue",{ambientLight:0,backgroundColor:"#000000",bloom:.6,brightness:.5,burnIn:.3,chromaColor:1,contrast:.8,flickering:.1,fontColor:"#7fb4ff",fontName:"BIGBLUE_TERMINAL_SCALED",fontSource:0,fontWidth:1,lineSpacing:.1,glowingLine:.2,horizontalSync:.1,jitter:.2,rasterization:0,rgbShift:0,saturationColor:.2,screenCurvature:.4,screenRadius:.1,staticNoise:.1,windowOpacity:1,margin:.3,blinkingCursor:false,frameSize:.1,frameColor:"#ffffff",frameShininess:.9}],
+ ["Commodore 64",{ambientLight:.4,backgroundColor:"#3b3b8f",bloom:.4,brightness:.6,burnIn:.1,chromaColor:0,contrast:.7,flickering:.1,fontColor:"#a9a7ff",fontName:"COMMODORE_64_SCALED",fontSource:0,fontWidth:1,lineSpacing:.1,glowingLine:.1,horizontalSync:0,jitter:0,rasterization:1,rgbShift:0,saturationColor:0,screenCurvature:.5,screenRadius:.1,staticNoise:.1,windowOpacity:1,margin:.3,blinkingCursor:false,frameSize:.5,frameColor:"#999999",frameShininess:0}],
+ ["Apple ][",{ambientLight:1,backgroundColor:"#001100",bloom:.3,brightness:.5,burnIn:.3,chromaColor:0,contrast:.8,flickering:.2,fontColor:"#4dff6b",fontName:"APPLE_II_SCALED",fontSource:0,fontWidth:1.25,lineSpacing:.1,glowingLine:.3,horizontalSync:.2,jitter:.2,rasterization:1,rgbShift:0,saturationColor:0,screenCurvature:.5,screenRadius:.3,staticNoise:.2,windowOpacity:1,margin:0,blinkingCursor:false,frameSize:.2,frameColor:"#ffffff",frameShininess:.8}],
+ ["IBM 3278 Reborn",{ambientLight:.2,backgroundColor:"#000000",bloom:.2,brightness:.5,burnIn:.5,chromaColor:0,contrast:.8,flickering:0,fontColor:"#3cff7a",fontName:"IBM_3278",fontSource:0,fontWidth:1,lineSpacing:.1,glowingLine:0,horizontalSync:0,jitter:0,rasterization:4,rgbShift:0,saturationColor:0,screenCurvature:0,screenRadius:0,staticNoise:0,windowOpacity:1,margin:.1,blinkingCursor:false,frameSize:0,frameColor:"#ffffff",frameShininess:.2}],
+ ["Neon Cyan",{ambientLight:.1,backgroundColor:"#001018",bloom:.6,brightness:.6,burnIn:.1,chromaColor:1,contrast:.9,flickering:.1,fontColor:"#52f7ff",fontName:"IOSEVKA",fontSource:0,fontWidth:1,lineSpacing:.1,glowingLine:.2,horizontalSync:0,jitter:.1,rasterization:4,rgbShift:0,saturationColor:.6,screenCurvature:0,screenRadius:0,staticNoise:.1,windowOpacity:.8,margin:.1,blinkingCursor:false,frameSize:0,frameColor:"#c3c3c3",frameShininess:.2}],
+ ["Plasma",{ambientLight:.1,backgroundColor:"#070014",bloom:.7,brightness:.6,burnIn:.1,chromaColor:1,contrast:.8,flickering:.1,fontColor:"#ff9bd6",fontName:"FIRA_CODE",fontSource:0,fontWidth:1,lineSpacing:.1,glowingLine:.2,horizontalSync:0,jitter:.1,rasterization:4,rgbShift:.1,saturationColor:.8,screenCurvature:0,screenRadius:0,staticNoise:.1,windowOpacity:1,margin:.1,blinkingCursor:false,frameSize:0,frameColor:"#d0d0d0",frameShininess:.2}],
+ ["Boring",{ambientLight:.1,backgroundColor:"#000000",bloom:.5,brightness:.5,burnIn:.05,chromaColor:1,contrast:.8,flickering:0,fontColor:"#ffffff",fontName:"JETBRAINS_MONO",fontSource:0,fontWidth:1,lineSpacing:.1,glowingLine:.1,horizontalSync:0,jitter:0,rasterization:4,rgbShift:0,saturationColor:0,screenCurvature:0,screenRadius:0,staticNoise:0,windowOpacity:1,margin:0,blinkingCursor:false,frameSize:0,frameColor:"#c0c0c0",frameShininess:.2}],
+ ["E-Ink",{ambientLight:.6,backgroundColor:"#f2f2ec",bloom:0,brightness:1,burnIn:.6,chromaColor:0,contrast:.5,flickering:0,fontColor:"#101010",fontName:"HACK",fontSource:0,fontWidth:1,lineSpacing:.1,glowingLine:0,horizontalSync:0,jitter:0,rasterization:4,rgbShift:0,saturationColor:0,screenCurvature:0,screenRadius:0,staticNoise:0,windowOpacity:1,margin:.1,blinkingCursor:false,frameSize:0,frameColor:"#cdcdcd",frameShininess:.2}],
+ ["The Matrix has you...",{backgroundColor:"#020000",fontColor:"#5efaac",flickering:.2015,horizontalSync:.1072,staticNoise:.1004,chromaColor:.2486,saturationColor:.4012,screenCurvature:.5,glowingLine:.0286,burnIn:.0982,bloom:.5,rasterization:0,jitter:.2464,rgbShift:.0522,brightness:.5,contrast:.85,ambientLight:.0309,windowOpacity:1,fontName:"Nimbus Mono PS",fontSource:1,fontWidth:1,margin:.5}],
+ ["Kindle",{ambientLight:0,backgroundColor:"#d4ddc4",bloom:0,brightness:.3704,burnIn:.4038,chromaColor:0,contrast:1,flickering:0,fontColor:"#1e1e1e",fontName:"INCONSOLATA",fontWidth:1,glowingLine:0,horizontalSync:0,jitter:0,rasterization:0,rgbShift:0,saturationColor:0,screenCurvature:0,staticNoise:0,windowOpacity:1,frameSize:0}],
+ ["Clean",{ambientLight:0,backgroundColor:"#000000",bloom:.1,brightness:1,burnIn:0,chromaColor:1,contrast:1,flickering:.3,fontColor:"#ffffff",fontName:"TERMINUS_SCALED",fontWidth:1,glowingLine:0,horizontalSync:.25,jitter:.2,rasterization:0,rgbShift:0,saturationColor:1,screenCurvature:0,staticNoise:.05,windowOpacity:1,frameSize:0}],
+ ["Vertigo",{ambientLight:.16,backgroundColor:"#000000",bloom:.65,brightness:.5,burnIn:.1969,chromaColor:0,contrast:.85,flickering:.1,fontColor:"#aaff7f",fontName:"IBM_DOS",fontWidth:1,glowingLine:0,horizontalSync:.16,jitter:.0529,rasterization:0,rgbShift:0,saturationColor:0,screenCurvature:0,staticNoise:0,windowOpacity:.6961,frameSize:0}],
+ ["MU/TH/UR",{ambientLight:.15,backgroundColor:"#000000",bloom:.4,brightness:.6,burnIn:.1,chromaColor:1,contrast:1,flickering:0,fontColor:"#41e64e",fontName:"TERMINUS",fontWidth:1,glowingLine:0,horizontalSync:.16,jitter:.05,rasterization:1,rgbShift:0,saturationColor:1,screenCurvature:0,staticNoise:0,windowOpacity:.9}],
+ ["Night Owl (Dark)",{backgroundColor:"#011627",fontColor:"#729fcf",flickering:.2,horizontalSync:0,staticNoise:.0955,chromaColor:1,saturationColor:.4983,screenCurvature:0,glowingLine:.1476,burnIn:.0955,bloom:.5017,rasterization:0,jitter:.099,rgbShift:0,brightness:.5014,contrast:.85,ambientLight:0,windowOpacity:1,fontName:"JETBRAINS_MONO",fontWidth:1,margin:.1,frameSize:0}],
+ ["Terminator Vision",{backgroundColor:"#ff0000",fontColor:"#ffffff",flickering:.2,horizontalSync:0,staticNoise:.0955,chromaColor:1,saturationColor:.4983,screenCurvature:.3,glowingLine:.1476,burnIn:.0955,bloom:.1483,rasterization:0,jitter:.099,rgbShift:0,brightness:.5014,contrast:.85,ambientLight:0,windowOpacity:.7261,fontName:"PRO_FONT",fontWidth:1,margin:.1}]
+];
+
+var S={}, NAME="Default Amber";
+var $=function(id){return document.getElementById(id);};
+
+/* ---------- interface ---------- */
+SLIDERS.forEach(function(d){
+  var row=document.createElement("div");row.className="ctl";var id="s_"+d[1];
+  row.innerHTML='<label class="lab" for="'+id+'"><span id="l_'+d[1]+'"></span><small>'+d[1]+'</small></label>'+
+   '<input type="range" id="'+id+'" min="'+d[2]+'" max="'+d[3]+'" step="'+d[4]+'"><output id="o_'+d[1]+'" for="'+id+'"></output>';
+  $(d[0]).appendChild(row);
+  $(id).addEventListener("input",function(e){S[d[1]]=parseFloat(e.target.value);changed();});
+});
+FONTS.forEach(function(f){var o=document.createElement("option");o.value=f[0];$("fontSel").appendChild(o);});
+function buildPresets(){
+  var sel=$("preset");sel.innerHTML="";
+  var o0=document.createElement("option");o0.value="";o0.textContent=t("preset_choose");sel.appendChild(o0);
+  PRESETS.forEach(function(p,i){var o=document.createElement("option");o.value=String(i);o.textContent=p[0];sel.appendChild(o);});
+}
+
+/* ---------- langue et apparence ---------- */
+var hostTheme=document.documentElement.getAttribute("data-theme");
+function applyTheme(v){
+  var r=document.documentElement;
+  if(v==="light"||v==="dark")r.setAttribute("data-theme",v);
+  else if(hostTheme)r.setAttribute("data-theme",hostTheme);else r.removeAttribute("data-theme");
+}
+function applyLang(l){
+  LANG=I18N[l]?l:"en";document.documentElement.lang=LANG;
+  document.querySelectorAll("[data-i18n]").forEach(function(el){el.textContent=t(el.getAttribute("data-i18n"));});
+  document.querySelectorAll("[data-i18n-html]").forEach(function(el){el.innerHTML=t(el.getAttribute("data-i18n-html"));});
+  SLIDERS.forEach(function(d){$("l_"+d[1]).textContent=I18N[LANG].s[d[1]];});
+  Array.prototype.forEach.call($("fontSel").options,function(o,i){
+    var f=FONTS[i];o.textContent=f[0]==="__SYSTEM__"?t("sys_option"):f[1].replace("(~)","("+t("unscaled")+")");
+  });
+  buildPresets();
+  $("crt").setAttribute("aria-label",t("canvas"));$("json").setAttribute("aria-label",t("json_label"));
+  SCRIPT[2].out=[[[t("term1"),C.def]],[[t("term2"),C.def]]];
+  SCRIPT[5].out[2]=[[t("tasks"),C.def],["142",C.m],[t("total"),C.def],["1",C.g],[t("running"),C.def]];
+}
+$("langSel").addEventListener("change",function(e){applyLang(e.target.value);store("crtgen-lang",LANG);});
+$("themeSel").addEventListener("change",function(e){applyTheme(e.target.value);store("crtgen-theme",e.target.value);});
+
+["fontColor","backgroundColor","frameColor"].forEach(function(k){$(k).addEventListener("input",function(e){S[k]=e.target.value;changed();});});
+$("blinkingCursor").addEventListener("change",function(e){S.blinkingCursor=e.target.checked;changed();});
+$("rasterization").addEventListener("change",function(e){S.rasterization=parseInt(e.target.value,10);changed();});
+$("fontSel").addEventListener("change",function(e){
+  if(e.target.value==="__SYSTEM__"){S.fontSource=1;S.fontName=$("sysFont").value.trim()||"Monospace";}
+  else{S.fontSource=0;S.fontName=e.target.value;}
+  changed();
+});
+$("sysFont").addEventListener("input",function(e){S.fontSource=1;S.fontName=e.target.value.trim()||"Monospace";changed();});
+$("name").addEventListener("input",function(e){NAME=e.target.value;changed(true);});
+$("preset").addEventListener("change",function(e){
+  if(e.target.value==="")return;var p=PRESETS[+e.target.value];load(p[1],p[0]);e.target.value="";toast(t("t_preset",p[0]));
+});
+$("resetBtn").addEventListener("click",function(){load(PRESETS[0][1],PRESETS[0][0]);toast(t("t_reset"));});
+$("randBtn").addEventListener("click",randomTheme);
+$("importToggle").addEventListener("click",function(){$("importBox").hidden=!$("importBox").hidden;});
+$("importBtn").addEventListener("click",function(){importText($("importText").value);});
+$("importFile").addEventListener("change",function(e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  var r=new FileReader();r.onload=function(){$("importText").value=r.result;importText(r.result);};r.readAsText(f);e.target.value="";
+});
+$("copyBtn").addEventListener("click",copyJson);
+$("dlBtn").addEventListener("click",downloadJson);
+
+function normalize(o){
+  var x={},k;for(k in DEFAULTS)x[k]=DEFAULTS[k];
+  if(o.rbgShift!==undefined&&o.rgbShift===undefined)o.rgbShift=o.rbgShift;
+  for(k in DEFAULTS){if(o[k]!==undefined)x[k]=o[k];}
+  if(typeof x.fontName==="string"&&x.fontName.indexOf("System: ")===0){x.fontSource=1;x.fontName=x.fontName.slice(8);}
+  ["backgroundColor","fontColor","frameColor"].forEach(function(c){x[c]=normHex(x[c],DEFAULTS[c]);});
+  for(k in x){if(typeof DEFAULTS[k]==="number"&&k!=="rasterization"&&k!=="fontSource"){var v=parseFloat(x[k]);x[k]=isFinite(v)?v:DEFAULTS[k];}}
+  x.rasterization=Math.max(0,Math.min(4,parseInt(x.rasterization,10)||0));
+  x.fontSource=x.fontSource?1:0;x.blinkingCursor=!!x.blinkingCursor;
+  return x;
+}
+function normHex(h,d){
+  if(typeof h!=="string")return d;h=h.trim();
+  if(/^#[0-9a-f]{3}$/i.test(h))h="#"+h[1]+h[1]+h[2]+h[2]+h[3]+h[3];
+  if(/^#[0-9a-f]{8}$/i.test(h))h="#"+h.slice(3);
+  return /^#[0-9a-f]{6}$/i.test(h)?h.toLowerCase():d;
+}
+function load(obj,name){S=normalize(obj);NAME=name||t("n_default");syncUI();changed();}
+function importText(txt){
+  var err=$("importErr");
+  try{
+    var o=JSON.parse(txt);
+    if(Array.isArray(o))o=o[0];
+    if(o&&o.obj_string)o=JSON.parse(o.obj_string);
+    if(!o||typeof o!=="object")throw new Error("empty");
+    err.hidden=true;load(o,o.name||o.text||t("n_imported"));$("importBox").hidden=true;toast(t("t_imported"));
+  }catch(e){err.textContent=t("import_err");err.hidden=false;}
+}
+function randomTheme(){
+  var h=Math.random()*360;
+  var r=function(a,b){return Math.round((a+Math.random()*(b-a))*100)/100;};
+  var colorful=Math.random()<.4;
+  load({fontColor:colorful?hsl2hex(h,.3,.9):hsl2hex(h,.9,.5+Math.random()*.2),backgroundColor:hsl2hex((h+180)%360,.5,Math.random()*.06),
+    bloom:r(.2,.8),glowingLine:r(0,.35),burnIn:r(.05,.5),ambientLight:r(0,.4),staticNoise:r(0,.25),flickering:r(0,.2),horizontalSync:r(0,.2),jitter:r(0,.25),rgbShift:r(0,.15),
+    chromaColor:colorful?r(.7,1):r(0,.3),saturationColor:r(0,.5),contrast:r(.7,1),brightness:r(.45,.7),screenCurvature:r(0,.6),screenRadius:r(0,.4),margin:r(.1,.5),
+    frameSize:r(0,.5),frameShininess:r(0,.8),frameColor:hsl2hex(30,.08,.55+Math.random()*.35),rasterization:Math.floor(Math.random()*4),
+    fontName:FONTS[Math.floor(Math.random()*(FONTS.length-1))][0],fontWidth:1,lineSpacing:.1,windowOpacity:1},t("n_random"));
+  toast(t("t_random"));
+}
+function hsl2hex(h,s,l){
+  var a=s*Math.min(l,1-l);function f(n){var k=(n+h/30)%12;var c=l-a*Math.max(-1,Math.min(k-3,9-k,1));return Math.round(c*255).toString(16).padStart(2,"0");}
+  return "#"+f(0)+f(8)+f(4);
+}
+function syncUI(){
+  SLIDERS.forEach(function(d){$("s_"+d[1]).value=S[d[1]];});
+  $("fontColor").value=S.fontColor;$("backgroundColor").value=S.backgroundColor;$("frameColor").value=S.frameColor;
+  $("blinkingCursor").checked=S.blinkingCursor;$("rasterization").value=String(S.rasterization);
+  var known=S.fontSource===0&&FONTS.some(function(f){return f[0]===S.fontName;});
+  $("fontSel").value=known?S.fontName:"__SYSTEM__";
+  if(!known)$("sysFont").value=S.fontName;
+  $("name").value=NAME;
+}
+function round4(v){return Number(Number(v).toFixed(4));}
+function profile(){
+  var o={};ORDER.forEach(function(k){var v=S[k];o[k]=(typeof v==="number")?round4(v):v;});
+  o.rbgShift=o.rgbShift; /* key read by older releases (1.2.x) */
+  o.name=NAME.trim()||t("n_default");o.version=2;return o;
+}
+function asciiOnly(s){var out="";for(var i=0;i<s.length;i++){if(s.charCodeAt(i)<128)out+=s[i];}return out;}
+function slug(){var s=asciiOnly((NAME||"theme").normalize("NFD")).toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");return (s||"theme")+".json";}
+function jsonText(){return JSON.stringify(profile(),null,2)+"\n";}
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+function highlight(txt){
+  return esc(txt).replace(/("(?:[^"\\]|\\.)*")(\s*:)?|\b(true|false)\b|(-?\d+(?:\.\d+)?)/g,function(m,str,colon,bool,num){
+    if(str)return colon?'<span class="k">'+str+'</span>'+colon:'<span class="s">'+str+'</span>';
+    if(bool)return '<span class="b">'+bool+'</span>';
+    return '<span class="n">'+num+'</span>';
+  });
+}
+var saveT=0;
+function changed(nameOnly){
+  SLIDERS.forEach(function(d){$("o_"+d[1]).textContent=Number(S[d[1]]).toFixed(2);});
+  ["fontColor","backgroundColor","frameColor"].forEach(function(k){$(k+"Hex").textContent=S[k];});
+  $("sysWrap").hidden=$("fontSel").value!=="__SYSTEM__";
+  $("json").innerHTML=highlight(jsonText());
+  $("fileName").textContent=slug();
+  $("themeLabel").textContent=NAME||t("n_default");
+  if(!nameOnly)updateLook();
+  clearTimeout(saveT);saveT=setTimeout(function(){store("crtgen-state",JSON.stringify({s:S,n:NAME}));},300);
+}
+
+/* ---------- copie / telechargement ---------- */
+var toastT=0;
+function toast(m){var el=$("toast");el.textContent=m;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){el.hidden=true;},2400);}
+function copyJson(){
+  var txt=jsonText();
+  try{navigator.clipboard.writeText(txt).then(function(){toast(t("t_copied"));},selectJson);}catch(e){selectJson();}
+}
+function selectJson(){var r=document.createRange();r.selectNodeContents($("json"));var s=getSelection();s.removeAllRanges();s.addRange(r);toast(t("t_selected"));}
+function downloadJson(){
+  var txt=jsonText(),fn=slug(),c=window.claude;
+  if(c&&typeof c.use==="function"){
+    c.use("downloads").then(function(d){
+      if(!d){blobDownload(txt,fn);return;}
+      d.save({filename:fn,data:txt}).then(function(){toast(t("t_saved",fn));},function(e){
+        if(e&&e.code==="declined")toast(t("t_cancel"));
+        else if(e&&e.code==="rate_limited")toast(t("t_busy"));
+        else toast(t("t_unavail"));
+      });
+    },function(){blobDownload(txt,fn);});
+  }else blobDownload(txt,fn);
+}
+function blobDownload(txt,fn){
+  try{var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"application/json"}));a.download=fn;document.body.appendChild(a);a.click();a.remove();toast(t("t_dl",fn));}
+  catch(e){toast(t("t_unavail"));}
+}
+
+/* ---------- moteur d'apercu (formule de couleur reprise de terminal_dynamic.frag) ---------- */
+var cv=$("crt"), gl=cv.getContext("webgl",{premultipliedAlpha:false,alpha:true,antialias:false});
+var txtC=document.createElement("canvas"), txc=txtC.getContext("2d");
+var accC=document.createElement("canvas"), acc=accC.getContext("2d");
+var blurC=document.createElement("canvas"), blr=blurC.getContext("2d");
+var W=800,H=600,LOOK={};
+function hex2rgb(h){return [parseInt(h.slice(1,3),16)/255,parseInt(h.slice(3,5),16)/255,parseInt(h.slice(5,7),16)/255];}
+function mix(a,b,k){return [a[0]*(1-k)+b[0]*k,a[1]*(1-k)+b[1]*k,a[2]*(1-k)+b[2]*k];}
+function updateLook(){
+  var f=hex2rgb(S.fontColor),b=hex2rgb(S.backgroundColor);
+  var sat=mix(f,[1,1,1],S.saturationColor*.5),k=.7+S.contrast*.3;
+  LOOK.font=mix(b,sat,k);LOOK.bg=mix(sat,b,k);LOOK.frame=hex2rgb(S.frameColor);
+  if(S.fontSource===1)LOOK.family='"'+String(S.fontName).replace(/"/g,"")+'", "IBM Plex Mono", monospace';
+  else{var m=FONTS.filter(function(x){return x[0]===S.fontName;})[0];LOOK.family='"'+(m?m[2]:"VT323")+'", monospace';}
+}
+var VS="attribute vec2 p;varying vec2 vUv;void main(){vUv=p*.5+.5;gl_Position=vec4(p,0.,1.);}";
+var FS=[
+"precision highp float;varying vec2 vUv;",
+"uniform sampler2D uTex;uniform sampler2D uBlur;uniform vec2 uRes;uniform float uTime;",
+"uniform vec3 uFont;uniform vec3 uBg;uniform vec3 uFrameCol;",
+"uniform float uCurv,uNoise,uGlow,uBloom,uBright,uAmb,uChroma,uRgb,uFlick,uHsync,uJitter,uRaster,uFrameSize,uRadius,uShine,uOpacity;",
+"float rand(vec2 c){return fract(sin(dot(c,vec2(12.9898,78.233)))*43758.5453);}",
+"vec2 barrel(vec2 uv){vec2 cc=uv-.5;float d=dot(cc,cc)*uCurv*.6;return uv+cc*(1.+d)*d;}",
+"float rbox(vec2 p,vec2 b,float r){vec2 q=abs(p)-b+r;return length(max(q,0.))+min(max(q.x,q.y),0.)-r;}",
+"float g2(vec3 v){return dot(v,vec3(.21,.72,.04));}",
+"vec3 fgc(vec3 c){float g=g2(c);return uChroma>0.?mix(uFont,c*uFont/max(g,.0001),uChroma):uFont;}",
+"void main(){",
+" vec2 uv=vec2(vUv.x,1.-vUv.y);",
+" float ft=uFrameSize*.09;",
+" vec2 s=(uv-ft)/(1.-2.*ft);",
+" vec2 c=barrel(s);",
+" float asp=uRes.x/uRes.y;",
+" vec2 p=(c-.5)*vec2(asp,1.);",
+" float sd=rbox(p,vec2(.5*asp,.5),uRadius*.12);",
+" float inside=1.-smoothstep(-.0015,.0015,sd);",
+" vec2 sc=c;",
+" float ln=floor(sc.y*uRes.y/2.);",
+" sc.x+=uHsync*.035*sin(sc.y*18.+uTime*9.)*(.5+.5*sin(uTime*1.7));",
+" sc+=(vec2(rand(vec2(uTime,ln)),rand(vec2(ln,uTime*1.3)))-.5)*uJitter*.004;",
+" float sh=uRgb*.006;",
+" vec3 tx=vec3(texture2D(uTex,sc+vec2(sh,0.)).r,texture2D(uTex,sc).g,texture2D(uTex,sc-vec2(sh,0.)).b);",
+" vec3 bl=texture2D(uBlur,sc).rgb;",
+" float a=clamp(g2(tx),0.,1.);",
+" float ba=clamp(g2(bl),0.,1.);",
+" vec3 col=mix(uBg,clamp(fgc(tx),0.,1.),a);",
+" col+=clamp(fgc(bl),0.,1.)*ba*uBloom*.9;",
+" float gp=fract(uTime*.12);",
+" col+=uFont*exp(-pow((sc.y-gp)*9.,2.))*uGlow*.28;",
+" float n=rand(floor(sc*uRes*.6)+fract(uTime*7.)*91.);",
+" col+=uFont*n*uNoise*.32*(.65+.35*sin(sc.y*4.+uTime*.7));",
+" vec2 px=sc*uRes;",
+" if(uRaster>.5&&uRaster<1.5){col*=.62+.38*abs(sin(px.y*3.14159/3.));}",
+" else if(uRaster>1.5&&uRaster<2.5){col*=(.62+.38*abs(sin(px.y*3.14159/3.)))*(.7+.3*abs(sin(px.x*3.14159/3.)));}",
+" else if(uRaster>2.5&&uRaster<3.5){float m=mod(floor(px.x),3.);vec3 mk=m<1.?vec3(1.,.45,.45):(m<2.?vec3(.45,1.,.45):vec3(.45,.45,1.));col*=mk*1.25*(.75+.25*abs(sin(px.y*3.14159/3.)));}",
+" col+=vec3(1.,.97,.9)*uAmb*.18*(1.-smoothstep(0.,.75,length(c-.5)));",
+" col*=1.-uFlick;",
+" col*=.5+uBright;",
+" col*=1.-dot(c-.5,c-.5)*uCurv*.9;",
+" float sa=mix(uOpacity,1.,clamp(a+ba*uBloom,0.,1.));",
+" vec3 fr;float fa;",
+" if(uFrameSize>.001){",
+"  float shade=.55+.35*(1.-uv.y)-.15*length(uv-.5);",
+"  fr=uFrameCol*shade;",
+"  fr+=vec3(1.)*uShine*.45*exp(-max(sd,0.)*55.);",
+"  fr+=uFont*uShine*.25*exp(-max(sd,0.)*25.)*(.4+ba);",
+"  fa=1.;",
+" } else { fr=vec3(0.); fa=uOpacity; }",
+" gl_FragColor=vec4(mix(fr,clamp(col,0.,1.),inside),mix(fa,sa,inside));",
+"}"].join("\n");
+var prog,U={},texA,texB,ok=!!gl;
+function mkShader(type,src){var s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){console.error(gl.getShaderInfoLog(s));ok=false;}return s;}
+function mkTex(){var x=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,x);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);return x;}
+if(ok){
+  prog=gl.createProgram();gl.attachShader(prog,mkShader(gl.VERTEX_SHADER,VS));gl.attachShader(prog,mkShader(gl.FRAGMENT_SHADER,FS));gl.linkProgram(prog);gl.useProgram(prog);
+  var buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW);
+  var loc=gl.getAttribLocation(prog,"p");gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  ["uTex","uBlur","uRes","uTime","uFont","uBg","uFrameCol","uCurv","uNoise","uGlow","uBloom","uBright","uAmb","uChroma","uRgb","uFlick","uHsync","uJitter","uRaster","uFrameSize","uRadius","uShine","uOpacity"].forEach(function(n){U[n]=gl.getUniformLocation(prog,n);});
+  texA=mkTex();texB=mkTex();gl.uniform1i(U.uTex,0);gl.uniform1i(U.uBlur,1);
+}
+function resize(){
+  var r=cv.getBoundingClientRect(),dpr=Math.min(window.devicePixelRatio||1,1.5);
+  W=Math.max(320,Math.round(r.width*dpr));H=Math.round(W*3/4);
+  cv.width=W;cv.height=H;txtC.width=accC.width=W;txtC.height=accC.height=H;
+  blurC.width=Math.round(W/3);blurC.height=Math.round(H/3);
+  if(ok)gl.viewport(0,0,W,H);
+}
+window.addEventListener("resize",resize);
+
+/* ---------- session de terminal animee ---------- */
+var C={def:"#ffffff",g:"#4ee06a",b:"#5c8dff",c:"#46d9e0",y:"#f2d24b",r:"#ff5b52",m:"#d36bff"};
+var PROMPT=[["user@crt",C.g],[":",C.def],["~",C.b],["$ ",C.def]];
+var SCRIPT=[
+ {cmd:"uname -a",out:[[["Linux crt 6.8.0-45-generic #45 SMP x86_64 GNU/Linux",C.def]]]},
+ {cmd:"ls --color",out:[[["bin/  ",C.b],["docs/  ",C.b],["src/  ",C.b],["build.sh  ",C.g],["notes.txt  ",C.def],["theme.json",C.y]]]},
+ {cmd:"cat notes.txt",out:[]},
+ {cmd:"git status -s",out:[[[" M ",C.r],["theme.json",C.def]],[["?? ",C.r],["screenshots/",C.def]]]},
+ {cmd:"ping -c 2 retro.local",out:[[["64 bytes from 10.0.0.42: icmp_seq=1 time=0.41 ms",C.def]],[["64 bytes from 10.0.0.42: icmp_seq=2 time=0.38 ms",C.def]]]},
+ {cmd:"top -bn1 | head -3",out:[[["CPU ",C.c],["[",C.def],["||||||||||||",C.g],["||||",C.y],["        ",C.def],["] 41%",C.def]],[["MEM ",C.c],["[",C.def],["||||||||",C.g],["||",C.r],["              ",C.def],["] 28%",C.def]],[]]},
+ {cmd:"echo $TERM",out:[[["xterm-256color",C.def]]]}
+];
+var lines=[],cur=null,stepI=0,phase="type",charI=0,nextAt=0,ROWS=18;
+function push(l){lines.push(l);while(lines.length>ROWS)lines.shift();}
+function tick(now){
+  if(now<nextAt)return;
+  var st=SCRIPT[stepI];
+  if(phase==="type"){
+    if(!cur){cur=PROMPT.slice();cur.push(["",C.def]);}
+    if(charI<st.cmd.length){cur[cur.length-1][0]+=st.cmd[charI++];nextAt=now+45+Math.random()*90;}
+    else{phase="out";push(cur);cur=null;charI=0;nextAt=now+250;}
+  }else if(phase==="out"){
+    st.out.forEach(push);stepI++;phase="type";nextAt=now+700;
+    if(stepI>=SCRIPT.length){stepI=0;nextAt=now+1800;phase="clear";}
+  }else if(phase==="clear"){lines=[];phase="type";nextAt=now+200;}
+}
+function drawText(now){
+  var m=S.margin*.07,padX=W*(.02+m),padY=H*(.025+m);
+  var availH=H-padY*2,availW=W-padX*2,ls=1+S.lineSpacing;
+  txc.font="100px "+LOOK.family;
+  var cw=txc.measureText("M").width/100*S.fontWidth;
+  var size=Math.min(availH/(ROWS*ls),availW/(52*Math.max(cw,.3)));
+  txc.setTransform(1,0,0,1,0,0);txc.fillStyle="#000";txc.fillRect(0,0,W,H);
+  txc.font=size+"px "+LOOK.family;txc.textBaseline="top";
+  txc.save();txc.beginPath();txc.rect(padX,padY,availW,availH);txc.clip();txc.scale(S.fontWidth,1);
+  var lh=size*ls,y=padY,all=lines.slice();
+  var showCur=!S.blinkingCursor||(Math.floor(now/530)%2===0);
+  var live=cur?cur:(phase==="type"||phase==="clear"?PROMPT.concat([["",C.def]]):null);
+  if(live){all=all.slice(Math.max(0,all.length-(ROWS-1)));all.push(live);}
+  for(var i=0;i<all.length;i++){
+    var x=padX/S.fontWidth;
+    for(var j=0;j<all[i].length;j++){var seg=all[i][j];txc.fillStyle=seg[1];txc.fillText(seg[0],x,y);x+=txc.measureText(seg[0]).width;}
+    if(live&&i===all.length-1&&showCur){txc.fillStyle=C.def;txc.fillRect(x,y,size*.6,size*.95);}
+    y+=lh;
+  }
+  txc.restore();
+  var fade=.16+(1.6-.16)*S.burnIn;
+  var keep=S.burnIn<.01?0:Math.exp(Math.log(.03)/(fade*60));
+  acc.globalCompositeOperation="source-over";acc.fillStyle="rgba(0,0,0,"+(1-keep)+")";acc.fillRect(0,0,W,H);
+  acc.globalCompositeOperation="lighten";acc.drawImage(txtC,0,0);acc.globalCompositeOperation="source-over";
+  blr.filter="blur("+Math.max(1,blurC.width*.012)+"px)";blr.clearRect(0,0,blurC.width,blurC.height);
+  blr.drawImage(accC,0,0,blurC.width,blurC.height);blr.filter="none";
+}
+var flick=0,hs=0,t0=performance.now(),reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+function frame(now){
+  tick(now);drawText(now);
+  if(Math.random()<.25)flick=S.flickering*Math.random()*.3;
+  hs*=.9;if(Math.random()<S.horizontalSync*.04)hs=1;
+  if(ok){
+    gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texA);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,accC);
+    gl.activeTexture(gl.TEXTURE1);gl.bindTexture(gl.TEXTURE_2D,texB);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,blurC);
+    var tt=(now-t0)/1000;
+    gl.uniform2f(U.uRes,W,H);gl.uniform1f(U.uTime,reduce?0:tt);
+    gl.uniform3fv(U.uFont,LOOK.font);gl.uniform3fv(U.uBg,LOOK.bg);gl.uniform3fv(U.uFrameCol,LOOK.frame);
+    gl.uniform1f(U.uCurv,S.screenCurvature);gl.uniform1f(U.uNoise,S.staticNoise);gl.uniform1f(U.uGlow,S.glowingLine);
+    gl.uniform1f(U.uBloom,S.bloom);gl.uniform1f(U.uBright,S.brightness);gl.uniform1f(U.uAmb,S.ambientLight);
+    gl.uniform1f(U.uChroma,S.chromaColor);gl.uniform1f(U.uRgb,S.rgbShift);gl.uniform1f(U.uFlick,reduce?0:flick);
+    gl.uniform1f(U.uHsync,reduce?0:S.horizontalSync*(.25+hs));gl.uniform1f(U.uJitter,reduce?0:S.jitter);
+    gl.uniform1f(U.uRaster,S.rasterization);gl.uniform1f(U.uFrameSize,S.frameSize);gl.uniform1f(U.uRadius,S.screenRadius);
+    gl.uniform1f(U.uShine,S.frameShininess);gl.uniform1f(U.uOpacity,S.windowOpacity);
+    gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- demarrage ---------- */
+var savedLang=read("crtgen-lang"),nav=(navigator.language||"fr").slice(0,2).toLowerCase();
+var startLang=savedLang||(I18N[nav]?nav:"en");
+$("langSel").value=startLang;applyLang(startLang);
+var savedTheme=read("crtgen-theme")||"system";$("themeSel").value=savedTheme;applyTheme(savedTheme);
+var saved=null;try{saved=JSON.parse(read("crtgen-state")||"null");}catch(e){}
+if(saved&&saved.s){S=normalize(saved.s);NAME=saved.n||t("n_default");}else{S=normalize(PRESETS[0][1]);NAME=PRESETS[0][0];}
+syncUI();changed();resize();
+for(var w=0;w<4;w++){var st=SCRIPT[w];var l=PROMPT.slice();l.push([st.cmd,C.def]);push(l);st.out.forEach(push);}
+stepI=4;
+if(!ok){var pe=document.createElement("p");pe.className="err";pe.textContent=t("webgl");cv.parentNode.appendChild(pe);}
+requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>
