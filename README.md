@@ -79,5 +79,5 @@ This project is an independent companion tool. It is not affiliated with the coo
 
 ## Author
 
-**cool-rétro-term theme generator v1.0 - Frédéric AMELLA**
+**cool-retro-term theme generator v1.0 - Frédéric AMELLA**
 [github.com/fredericamella](https://github.com/fredericamella)
